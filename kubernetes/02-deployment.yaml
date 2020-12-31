@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: infra-api
+  namespace: infra-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: infra-api
+  template:
+    metadata:
+      labels:
+        app: infra-api
+        build_number: ${BUILD_NUMBER}
+    spec:
+      containers:
+      - name: infra-api
+        image: apascualco/infra-backend:$branch
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+        env:
+        - name: K8S_MASTER_URL
+          value: "$masterUrl"
+        - name: K8S_KUBE_CONFIG
+          value: "$config"
+        volumeMounts:
+          - name: backend-home
+            mountPath: /etc/backend
+      volumes:
+        - name: backend-home
+          persistentVolumeClaim:
+            claimName: infra-api-pvc
