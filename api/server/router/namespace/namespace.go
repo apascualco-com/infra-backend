@@ -1,4 +1,4 @@
-package pod
+package namespace
 
 import (
 	"apascualco.com/api/server/router"
