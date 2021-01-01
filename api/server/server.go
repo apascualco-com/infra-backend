@@ -2,6 +2,7 @@ package server
 
 import (
 	"apascualco.com/api"
+	"apascualco.com/api/server/router/namespace"
 	"apascualco.com/api/server/router/node"
 	"apascualco.com/api/server/router/pod"
 	"fmt"
@@ -15,6 +16,8 @@ import (
 )
 
 func initRoutes() []router.Router {
+	os.Setenv("K8S_MASTER_URL", "https://192.168.1.102:6443")
+	os.Setenv("K8S_KUBE_CONFIG", "/Users/cosm0s/.kube/config")
 	masterUrl := getEnvOrDefault("K8S_MASTER_URL", "https://localhost:6443")
 	kubeConfig := getEnvOrDefault("K8S_KUBE_CONFIG", "/etc/infra/config")
 	fmt.Println("Master url: " + masterUrl)
@@ -22,7 +25,8 @@ func initRoutes() []router.Router {
 	routes := []router.Router{
 		health.New(),
 		node.New(masterUrl, kubeConfig),
-		pod.NewNamespace(masterUrl, kubeConfig),
+		namespace.NewNamespace(masterUrl, kubeConfig),
+		pod.NewPod(masterUrl, kubeConfig),
 	}
 	return routes
 }

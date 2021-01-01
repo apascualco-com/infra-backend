@@ -41,11 +41,21 @@ func (k *KClient) Namespaces() []*k8s.Namespace {
 	return k8sNamespaceToNamespace(items)
 }
 
+func (k *KClient) Pods(namespace string) []*k8s.Pod {
+	nodes, _ := k.Client.CoreV1().Pods(namespace).List(context.TODO(), v1.ListOptions{})
+	items := nodes.Items
+	return k8sPodToPod(items)
+}
+
+func dayFromTime(date time.Time) string {
+	return strconv.Itoa(int(time.Since(date).Hours()/24)) + "d"
+}
+
 func k8sNodeToNode(nodes []v12.Node) []*k8s.Node {
 	var k8sNodes []*k8s.Node
 
 	for _, node := range nodes {
-		uptime := strconv.Itoa(int(time.Since(node.ObjectMeta.CreationTimestamp.Time).Hours()/24)) + "d"
+		uptime := dayFromTime(node.ObjectMeta.CreationTimestamp.Time)
 		k8sNode := &k8s.Node{
 			Name:             node.Name,
 			Date:             uptime,
@@ -77,7 +87,7 @@ func k8sNodeToNode(nodes []v12.Node) []*k8s.Node {
 func k8sNamespaceToNamespace(namespaces []v12.Namespace) []*k8s.Namespace {
 	var k8sNamespaces []*k8s.Namespace
 	for _, namespace := range namespaces {
-		uptime := strconv.Itoa(int(time.Since(namespace.CreationTimestamp.Time).Hours()/24)) + "d"
+		uptime := dayFromTime(namespace.CreationTimestamp.Time)
 		k8sNamespace := &k8s.Namespace{
 			Name: namespace.Name,
 			Date: uptime,
@@ -86,4 +96,25 @@ func k8sNamespaceToNamespace(namespaces []v12.Namespace) []*k8s.Namespace {
 
 	}
 	return k8sNamespaces
+}
+
+func k8sPodToPod(pods []v12.Pod) []*k8s.Pod {
+	var k8sPods []*k8s.Pod
+	for _, pod := range pods {
+		uptime := dayFromTime(pod.Status.StartTime.Time)
+		status := pod.Status.ContainerStatuses[0]
+		k8sPod := &k8s.Pod{
+			Namespace: pod.Namespace,
+			Name:      pod.Name,
+			Date:      uptime,
+			Ready:     strconv.FormatBool(status.Ready),
+			Status:    string(pod.Status.Phase),
+			Restarts:  strconv.FormatInt(int64(status.RestartCount), 10),
+			HostIp:    pod.Status.HostIP,
+			PodIp:     pod.Status.PodIP,
+		}
+		k8sPods = append(k8sPods, k8sPod)
+	}
+
+	return k8sPods
 }
