@@ -16,8 +16,6 @@ import (
 )
 
 func initRoutes() []router.Router {
-	os.Setenv("K8S_MASTER_URL", "https://192.168.1.102:6443")
-	os.Setenv("K8S_KUBE_CONFIG", "/Users/cosm0s/.kube/config")
 	masterUrl := getEnvOrDefault("K8S_MASTER_URL", "https://localhost:6443")
 	kubeConfig := getEnvOrDefault("K8S_KUBE_CONFIG", "/etc/infra/config")
 	fmt.Println("Master url: " + masterUrl)
